@@ -6,19 +6,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.serializers.auth_serializers import (
     SignupSerializer,
-    LoginSerializer,
-    GoogleSerializer
+    LoginSerializer
 )
 
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-
-import uuid
 
 User = get_user_model()
 
 
-# 🔐 Token generator
+# Token generator
 def get_tokens(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -27,20 +22,19 @@ def get_tokens(user):
     }
 
 
-# 🔹 Common response format
+#  Common response format
 def auth_response(message, user, tokens):
     return Response({
         "message": message,
         "access": tokens["access"],
         "refresh": tokens["refresh"],
         "user": {
-            "email": user.email,
-            "is_guest": user.is_guest
+            "email": user.email
         }
     })
 
 
-# ✅ 1. SIGNUP
+#  1. SIGNUP
 @api_view(['POST'])
 def signup(request):
     serializer = SignupSerializer(data=request.data)
@@ -61,7 +55,7 @@ def signup(request):
     return auth_response("Signup successful", user, tokens)
 
 
-# ✅ 2. LOGIN
+# 2. LOGIN
 @api_view(['POST'])
 def login(request):
     serializer = LoginSerializer(data=request.data)
@@ -82,49 +76,3 @@ def login(request):
     return auth_response("Login successful", user, tokens)
 
 
-# ✅ 3. GUEST LOGIN
-@api_view(['POST'])
-def guest_login(request):
-    temp_email = f"guest_{uuid.uuid4()}@temp.com"
-
-    user = User.objects.create(
-        email=temp_email,
-        is_guest=True
-    )
-    user.set_unusable_password()
-    user.save()
-
-    tokens = get_tokens(user)
-
-    return auth_response("Guest login successful", user, tokens)
-
-
-# ✅ 4. GOOGLE LOGIN
-@api_view(['POST'])
-def google_login(request):
-    serializer = GoogleSerializer(data=request.data)
-
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=400)
-
-    token = serializer.validated_data['token']
-
-    try:
-        idinfo = id_token.verify_oauth2_token(
-            token,
-            google_requests.Request()
-        )
-
-        email = idinfo.get('email')
-
-        if not email:
-            return Response({"error": "Email not found"}, status=400)
-
-        user, _ = User.objects.get_or_create(email=email)
-
-        tokens = get_tokens(user)
-
-        return auth_response("Google login successful", user, tokens)
-
-    except ValueError:
-        return Response({"error": "Invalid Google token"}, status=400)

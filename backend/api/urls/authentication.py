@@ -1,16 +1,14 @@
-# api/urls/authentication.py
-
 from django.urls import path
 from api.views.authentication import (
     signup,
-    login,
-    guest_login,
-    google_login
+    login
 )
+from rest_framework_simplejwt.views import TokenRefreshView  
 
 urlpatterns = [
     path('signup/', signup),
     path('login/', login),
-    path('guest/', guest_login),
-    path('google/', google_login),
+
+    
+    path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

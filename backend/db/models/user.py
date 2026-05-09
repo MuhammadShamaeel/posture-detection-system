@@ -28,12 +28,11 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
-    is_guest = models.BooleanField(default=False)  # ✅ added
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = UserManager()  # ✅ IMPORTANT
+    objects = UserManager() 
 
     def __str__(self):
         return self.email

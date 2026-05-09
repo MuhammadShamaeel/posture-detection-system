@@ -11,5 +11,3 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
 
-class GoogleSerializer(serializers.Serializer):
-    token = serializers.CharField()
