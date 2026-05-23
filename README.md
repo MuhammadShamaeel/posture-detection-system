@@ -53,53 +53,52 @@ PostureGuard provides an intelligent, real-time solution that:
 - Works with standard webcam
 
 ## 🏗️ System Architecture
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                                    FRONTEND (React)                                  │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐   │
-│  │   Webcam    │───▶│  MediaPipe  │───▶│   Angle     │───▶│   Send to Django    │   │
-│  │   Capture   │    │    Pose     │    │ Calculation │    │       API           │   │
-│  └─────────────┘    └─────────────┘    └─────────────┘    └──────────┬──────────┘   │
-│                                                                       │              │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐               │              │
-│  │   Alert     │◀───│   Zone      │◀───│   ML Result │               │              │
-│  │   Display   │    │   (G/Y/R)   │    │   from API  │               │              │
-│  └─────────────┘    └─────────────┘    └─────────────┘               │              │
-└───────────────────────────────────────────────────────────────────────┼──────────────┘
-                                                                        │
-                                                                        ▼
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                                    BACKEND (Django)                                  │
-│                                                                                      │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐   │
-│  │    JWT      │    │   Session   │    │    Load     │    │     Feature         │   │
-│  │   Auth      │───▶│  Management │───▶│   ML Model  │───▶│     Scaling         │   │
-│  │             │    │             │    │   (.pkl)    │    │                     │   │
-│  └─────────────┘    └─────────────┘    └──────┬──────┘    └──────────┬──────────┘   │
-│                                               │                      │              │
-│                                               ▼                      ▼              │
-│                                    ┌─────────────────┐    ┌─────────────────────┐   │
-│                                    │   Random Forest │    │      Database       │   │
-│                                    │   / SVM Model   │    │   (SQLite/PostgreSQL)│   │
-│                                    └─────────────────┘    └─────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────────────┘
 
-                                    ▲                              ▲
-                                    │                              │
-                    ┌───────────────┴───────────────┐              │
-                    │                               │              │
-            ┌───────┴───────┐               ┌───────┴───────┐       │
-            │  Neck Angle   │               │ Shoulder Slope│       │
-            │  Spine Tilt   │               │ Ear-Shoulder  │       │
-            │  Head Tilt    │               │    Ratio      │       │
-            └───────────────┘               └───────────────┘       │
-                                                                     │
-                                    ┌────────────────────────────────┘
-                                    ▼
-                    ┌───────────────────────────────────────────────┐
-                    │           Biomechanical Features              │
-                    │  (Input to ML Model for Posture Classification)│
-                    └───────────────────────────────────────────────┘
-                    
+```mermaid
+graph TB
+    subgraph Frontend["🖥️ FRONTEND (React)"]
+        WC[Webcam Capture] --> MP[MediaPipe Pose]
+        MP --> AC[Angle Calculation<br/>Neck, Shoulder, Spine]
+        AC --> API[POST /api/predict/]
+        VA[Voice Alert] --> ZC[Zone Classification<br/>GREEN/YELLOW/RED]
+        ZC --> MR[ML Result]
+        API --> MR
+    end
+
+    subgraph Backend["⚙️ BACKEND (Django)"]
+        AUTH[JWT Auth] --> SM[Session Management]
+        SM --> LOAD[Load ML Model]
+        LOAD --> FS[Feature Scaling]
+        FS --> PRED[Posture Prediction]
+        PRED --> DB[(Database<br/>SQLite/PostgreSQL)]
+    end
+
+    subgraph ML["🤖 ML Model"]
+        RF[Random Forest]
+        SVM[Support Vector Machine]
+        KNN[K-Nearest Neighbors]
+    end
+
+    subgraph Features["📊 Input Features"]
+        N[Neck Angle]
+        SS[Shoulder Slope]
+        ST[Spine Tilt]
+        ES[Ear-Shoulder Ratio]
+        HT[Head Tilt]
+        TA[Torso Angle]
+    end
+
+    API --> AUTH
+    PRED --> ZC
+    Features --> LOAD
+    LOAD --> ML
+    ML --> PRED
+
+    style Frontend fill:#1a1a2e,stroke:#16213e,color:#fff
+    style Backend fill:#1a1a2e,stroke:#16213e,color:#fff
+    style ML fill:#0f3460,stroke:#16213e,color:#fff
+    style Features fill:#16213e,stroke:#0f3460,color:#fff
+             
 ## 🛠️ Technology Stack
 
 | Category | Technologies Used |
