@@ -1,210 +1,126 @@
-# Posture Detection System
+# PostureGuard - AI-Based Real-Time Posture Detection System
 
-A modern real-time posture monitoring system that uses AI-powered pose estimation to detect sitting posture through a webcam, provide live visual and voice feedback, and store session analytics for long-term posture tracking.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.2-green.svg)](https://www.djangoproject.com/)
+[![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
+[![MediaPipe](https://img.shields.io/badge/MediaPipe-Pose-orange.svg)](https://mediapipe.dev/)
+[![ML](https://img.shields.io/badge/Machine-Learning-red.svg)](https://scikit-learn.org/)
 
----
+## 📌 Project Overview
 
-## 📌 Overview
+**PostureGuard** is an intelligent, non-intrusive web application that uses **computer vision and machine learning** to monitor user posture in real-time through a standard webcam. The system detects poor posture automatically and displays instant warning alerts, encouraging healthier sitting habits without interrupting workflow.
 
-This project is a browser-based posture monitoring system designed to help users maintain healthy sitting posture during long working hours.
+### Problem Statement
 
-The system captures live webcam input, extracts body landmarks using AI-based pose estimation, analyzes posture patterns in real time, and provides instant corrective feedback through visual indicators and voice alerts.
+In today's digital era, prolonged screen time during video calls, online classes, and remote work leads to poor sitting posture, causing musculoskeletal disorders including chronic back pain, neck strain, and spinal issues. Traditional posture correction methods are reactive rather than preventive.
 
-It also stores session analytics such as posture quality, posture trends, alert counts, and session duration for later review through reports and insights dashboards.
+### Solution
 
----
+PostureGuard provides an intelligent, real-time solution that:
+- Continuously monitors posture using a standard webcam
+- Uses **Machine Learning (Random Forest/SVM)** for accurate posture classification
+- Provides instant visual and voice feedback
+- Stores session data for posture history and weekly reports
 
 ## ✨ Key Features
 
-| Feature | Description |
-|---|---|
-| Real-Time Posture Detection | Detects user posture continuously using live webcam feed |
-| AI Pose Estimation | Uses MediaPipe Pose to extract body landmarks |
-| Calibration System | Learns the user's natural sitting posture before monitoring |
-| Live Visual Feedback | Displays posture state directly on screen |
-| Voice Alerts | Provides spoken posture correction alerts |
-| Session Analytics | Tracks posture quality and session statistics |
-| Reports Dashboard | Displays saved posture sessions and trends |
-| Pause & Resume Monitoring | Allows monitoring sessions to be paused without resetting |
-| Picture-in-Picture (PiP) Mode | Keeps monitoring visible while switching tabs |
-| Mirror Camera Option | Lets users flip the camera view for better usability |
-| Secure Authentication | JWT-based login and signup system |
-| Persistent User Settings | Saves settings such as voice alerts and mirror mode |
-| Protected Session Data | Each user can access only their own sessions |
-| Dark-Themed UI | Modern dark interface optimized for long usage |
+### 🎯 Real-Time Posture Detection
+- MediaPipe Pose for 33 body landmark extraction
+- Biomechanical angle calculation (neck angle, shoulder slope, spine tilt)
+- **Custom-trained ML model** (Random Forest/SVM) for posture classification
+- Real-time webcam processing directly in browser
 
----
+### 🔔 Smart Alert System
+- Live posture score (0-100) display
+- Visual feedback with color-coded zones (Green/Yellow/Red)
+- Warning popup toasts with corrective instructions
+- Voice alerts using Web Speech API
 
-## 🧠 System Workflow
+### 📊 Analytics Dashboard
+- Posture history tracking
+- Weekly performance reports
+- Session-wise data storage
+- Posture trend visualization with Chart.js
 
-1. Webcam captures live video  
-2. MediaPipe extracts body landmarks  
-3. Posture features are calculated  
-4. Posture is classified into zones  
-5. UI feedback and voice alerts are generated  
-6. Session statistics are tracked  
-7. Session data is stored in backend database  
-8. Reports and insights are displayed to the user  
+### 🔐 User Management
+- JWT-based authentication
+- Personal session storage
+- User-specific posture history
 
----
+### 🖥️ Browser-Based Implementation
+- No additional hardware required
+- Picture-in-Picture (PiP) support for uninterrupted monitoring
+- Works with standard webcam
 
-## 🛠 Tech Stack
+## 🏗️ System Architecture
+┌─────────────────────────────────────────────────────────────────┐
+│ FRONTEND (React) │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────────────┐ │
+│ │ Webcam Feed │→ │ MediaPipe │→ │ Angle Calculation │ │
+│ │ Capture │ │ Pose │ │ (Neck, Shoulder, etc)│ │
+│ └──────────────┘ └──────────────┘ └──────────┬───────────┘ │
+│ │ │
+│ ┌──────▼──────┐ │
+│ │ Send to │ │
+│ │ Django API │ │
+│ └──────┬──────┘ │
+└──────────────────────────────────────────────────┼──────────────┘
+│
+┌──────▼──────┐
+│ BACKEND │
+│ (Django) │
+┌───────────────────────────────────────────┼─────────────┼──────────────────────────────┐
+│ ┌────────────┐ ┌────────────┐ ┌───────▼──────┐ ┌────────────┐ ┌──────────────┐ │
+│ │ JWT Auth │ │ Session │ │ Load ML │ │ Feature │ │ SQLite/ │ │
+│ │ │ │ Management │ │ Model │→ │ Scaling │→ │ PostgreSQL │ │
+│ │ │ │ │ │ (.pkl) │ │ │ │ Database │ │
+│ └────────────┘ └────────────┘ └─────────────┘ └────────────┘ └──────────────┘ │
+│ │
+│ ┌─────────────────────────────────────────────────────────────────────────────────┐ │
+│ │ ML Model: Random Forest / SVM │ │
+│ │ Trained on 2000+ labeled posture samples │ │
+│ │ Features: neck_angle, shoulder_slope, spine_tilt, etc. │ │
+│ └─────────────────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────────┘
 
-### Frontend
+text
 
-| Technology | Usage |
-|---|---|
-| React | Frontend UI development |
-| Tailwind CSS | Styling and responsive UI |
-| Axios | API communication |
-| MediaPipe Pose | Real-time pose detection |
-| Browser Canvas API | Skeleton rendering and overlays |
-| Web Speech API | Voice posture alerts |
-| Picture-in-Picture API | Floating monitoring window |
-| Local Storage API | Persistent user settings |
+## 🛠️ Technology Stack
 
-### Backend
+| Category | Technologies Used |
+|----------|-------------------|
+| **Frontend** | React.js, JavaScript, Tailwind CSS |
+| **Computer Vision** | MediaPipe Pose |
+| **Machine Learning** | Scikit-learn (Random Forest, SVM, KNN) |
+| **Backend** | Django, Django REST Framework |
+| **Authentication** | JWT (Simple JWT) |
+| **Database** | SQLite / PostgreSQL |
+| **Data Analysis** | Pandas, NumPy, Matplotlib, Seaborn |
+| **API Communication** | REST API |
+| **Browser APIs** | Web Speech API, Picture-in-Picture API, Canvas API |
+| **Version Control** | Git, GitHub |
 
-| Technology | Usage |
-|---|---|
-| Django | Backend framework |
-| Django REST Framework | API development |
-| Simple JWT | Authentication system |
-| SQLite / Database | Session data storage |
+## 📋 Research Objectives
 
----
+1. Develop a web-based posture monitoring application using React and Django REST Framework
+2. Implement real-time human pose estimation using MediaPipe Pose
+3. Build and train a machine learning classification model (Random Forest/SVM)
+4. Calculate biomechanical angles as model features
+5. Display real-time warning popups and posture scores
+6. Store session data and provide posture history dashboard
+7. Create a scalable, non-intrusive posture monitoring solution
 
-## 🔐 Authentication System
+## 🚀 Installation Guide
 
-The project uses JWT-based authentication with secure token handling.
+### Prerequisites
 
-### Implemented Features
+- Python 3.8+
+- Node.js 16+
+- npm or yarn
+- Webcam (built-in or external)
 
-- User Signup  
-- User Login  
-- Access Token & Refresh Token generation  
-- Protected APIs using authentication middleware  
-- User-specific session access control  
-
----
-
-## 📊 Session Management
-
-The system supports complete posture session management.
-
-| Feature | Description |
-|---|---|
-| Create Session | Saves monitoring session data |
-| Fetch Sessions | Retrieves user posture history |
-| Delete Session | Deletes a selected session |
-| Clear Sessions | Removes all user sessions |
-
----
-
-## 🎥 Real-Time AI Engine
-
-The posture detection engine runs directly in the frontend browser.
-
-### Why Frontend-Based Processing?
-
-- Faster real-time performance  
-- Reduced backend processing load  
-- Lower latency  
-- Improved privacy since video stays in browser  
-- No continuous video streaming to server  
-
-### The backend is mainly responsible for:
-
-- Authentication  
-- Session storage  
-- Reports data management  
-
----
-
-## 📈 Posture Analysis Metrics
-
-The system tracks multiple posture-related metrics including:
-
-- Good posture percentage  
-- Poor posture duration  
-- Alert count  
-- Drift analysis  
-- Posture trend  
-- Session duration  
-- Posture Stability Index (PSI)  
-
----
-
-## 🚀 Future Enhancements
-
-| Enhancement | Description |
-|---|---|
-| Multi-Person Detection Support | Improve tracking when multiple people enter the frame |
-| Smart Exercise Recommendations | Suggest stretches and posture correction exercises |
-| Smart Break Reminder System | Detect long sitting duration and suggest breaks automatically |
-
----
-
-## ⚠ Current Limitations
-
-- Works best with laptop webcams and seated desk posture  
-- User should be centered and reasonably well-lit in frame  
-- Mobile layout is currently limited  
-
----
-
-## 📚 Research Reference
-
-https://ijprcp.com/articles/real-time-posture-monitoring-system-a-systematic-review
-
----
-
-## 👥 Team Members
-
-| Name | Role | Responsibilities |
-|---|---|---|
-| Aflaha A | Frontend & AI Workflow Development | Developed posture detection workflow, MediaPipe integration, monitoring UI, session handling, alerts, and frontend system architecture |
-| Thoufeeq | Backend Development & System Support | Worked on backend APIs, authentication, database integration, and session management |
-
----
-
-## ▶️ Running the Project
-
-### Clone the Repository
+### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/aflaha01/posture-detection-system.git
-```
-
-## 🧰 Setup Instructions
-
-### Frontend Setup
-
-```bash
-cd posture-detection-system/frontend
-npm install
-npm start
-```
-
-### Backend Setup
-
-```bash
-cd ../backend
-python -m venv venv
-```
-
-#### Activate Virtual Environment
-
-- Windows:
-  ```bash
-  venv\Scripts\activate
-  ```
-- macOS / Linux:
-  ```bash
-  source venv/bin/activate
-  ```
-
-```bash
-pip install -r requirements.txt
-python manage.py runserver
-```
+git clone https://github.com/MuhammadShamaeel/posture-detection-system.git
+cd posture-detection-system

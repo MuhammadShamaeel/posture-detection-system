@@ -18,13 +18,14 @@ db.sqlite3
 *.pot
 *.pyc
 local_settings.py
-db.sqlite3
 media/
 staticfiles/
 
-# Backend models (large files)
+# Backend models (large files - don't commit these)
 backend/models/*.pkl
 backend/models/*.joblib
+*.pkl
+*.joblib
 
 # Node
 node_modules/
@@ -61,9 +62,6 @@ logs/
 coverage/
 .nyc_output/
 
-# Misc
-*.pkl
-*.joblib
-*.pyc
-backend/models/*.pkl
-backend/models/*.joblib
+# Database
+*.sqlite3
+db.sqlite3
