@@ -62,13 +62,6 @@ const VOICE = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export class PostureEngine {
-  /**
-   * @param {HTMLVideoElement}  videoElement
-   * @param {HTMLCanvasElement} canvasElement
-   * @param {Function}          setPosture
-   * @param {Function}          onCalibrated
-   * @param {object}            settings     - from loadSettings(), live-updatable
-   */
   constructor(videoElement, canvasElement, setPosture, onCalibrated = null, settings = {}) {
     this.video      = videoElement;
     this.canvas     = canvasElement;
@@ -79,7 +72,6 @@ export class PostureEngine {
     this.isStopped = false;
     this.isPaused  = false;
 
-    // ── Settings — merged with defaults so missing keys are always safe ──────
     this.settings = { ...DEFAULT_SETTINGS, ...settings };
 
     this.calibration = new PostureCalibration();
@@ -93,21 +85,14 @@ export class PostureEngine {
     this._lastSpokenAt   = 0;
   }
 
-  // ─── Live settings update ────────────────────────────────────────────────
-  // Called by Monitor.jsx whenever the user changes a setting mid-session.
-  // Takes effect on the very next frame — no restart needed.
   updateSettings(partial) {
     this.settings = { ...this.settings, ...partial };
-
-    // If voice was just turned off, stop any speech in progress immediately
     if (partial.voiceAlert === false) {
       window.speechSynthesis?.cancel();
       this._lastSpokenZone = null;
       this._lastSpokenAt   = 0;
     }
   }
-
-  // ─── Public API ───────────────────────────────────────────────────────────
 
   startCalibration() {
     this.detector.reset();
@@ -126,7 +111,6 @@ export class PostureEngine {
     return this.detector.getAnalysis();
   }
 
-  // ─── Pause ────────────────────────────────────────────────────────────────
   pause() {
     if (this.isStopped || this.isPaused) return;
     this.isPaused = true;
@@ -135,7 +119,6 @@ export class PostureEngine {
     this._drawPauseOverlay();
   }
 
-  // ─── Resume ───────────────────────────────────────────────────────────────
   async resume() {
     if (this.isStopped || !this.isPaused) return;
     this.isPaused = false;
@@ -152,7 +135,6 @@ export class PostureEngine {
     await this.camera.start();
   }
 
-  // ─── Pause overlay ────────────────────────────────────────────────────────
   _drawPauseOverlay() {
     if (!this.canvas) return;
     const ctx    = this.canvas.getContext("2d");
@@ -186,9 +168,7 @@ export class PostureEngine {
     ctx.textBaseline = "alphabetic";
   }
 
-  // ─── Voice alert ──────────────────────────────────────────────────────────
   _handleVoiceAlert(zone) {
-    // ── Respect voiceAlert setting ─────────────────────────────────────────
     if (!this.settings.voiceAlert) return;
 
     if (!VOICE.SPEAK_ZONES.includes(zone)) {
@@ -209,8 +189,6 @@ export class PostureEngine {
     }
   }
 
-  // ─── Skeleton drawing ─────────────────────────────────────────────────────
-  // When mirrored, landmark x-coords are flipped: mirroredX = (1 - lm.x) * width
   _drawSkeleton(ctx, lm, width, height, zone) {
     const color    = ZONE_COLOR[zone] ?? ZONE_COLOR.GREEN;
     const mirrored = this.settings.mirrorCamera;
@@ -242,7 +220,6 @@ export class PostureEngine {
     }
   }
 
-  // ─── HUD overlay ──────────────────────────────────────────────────────────
   _drawHUD(ctx, width, height, zone, label) {
     const color  = zone === "PAUSED" ? "#818cf8" : (ZONE_COLOR[zone] ?? ZONE_COLOR.GREEN);
     const bg     = HUD.BG[zone]     ?? HUD.BG.GREEN;
@@ -278,8 +255,8 @@ export class PostureEngine {
     ctx.fillText(label, dotCX + HUD.DOT_R + gapInner, dotCY);
   }
 
-  // ─── MediaPipe results ────────────────────────────────────────────────────
-  _onResults(results) {
+  // ─── Main results handler (UPDATED to pass additional features) ─────────────
+  async _onResults(results) {
     if (this.isStopped || this.isPaused) return;
 
     const ctx    = this.canvas.getContext("2d");
@@ -288,7 +265,6 @@ export class PostureEngine {
 
     ctx.clearRect(0, 0, width, height);
 
-    // ── Mirror: flip canvas horizontally before drawing the video frame ────
     if (this.settings.mirrorCamera) {
       ctx.save();
       ctx.translate(width, 0);
@@ -303,6 +279,22 @@ export class PostureEngine {
 
     const lm       = results.poseLandmarks;
     const features = extractFeatures(lm);
+    
+    // --- NEW: Add additional features required by your ML model ---
+    // These are estimates based on pose landmarks. Adjust calculations as needed.
+    features.kneeAngle = this._calculateKneeAngle(lm);
+    features.elbowAngle = this._calculateElbowAngle(lm);
+    features.accelX = 0; // Placeholder - you can calculate from landmark movement over time
+    features.accelY = 0;
+    features.accelZ = 0;
+    features.gyroX = 0;
+    features.gyroY = 0;
+    features.gyroZ = 0;
+    features.repetitionNumber = this.detector.sessionFrames || 0;
+    features.stabilityMetric = 1 - (this.detector.psi / 100);
+    features.age = 25; // Default age - you can get this from user profile later
+    // -------------------------------------------------------------
+
     const cal      = this.calibration;
     const det      = this.detector;
 
@@ -315,7 +307,8 @@ export class PostureEngine {
       hudLabel = "Calibrating...";
       hudZone  = "GREEN";
     } else if (cal.isCalibrated) {
-      const label = det.detect(cal.baseline, features);
+      // Pass the enhanced features to the detector
+      const label = await det.detect(cal.baseline, features);
       this.setPosture(label);
       hudLabel = label;
       hudZone  = det.displayZone;
@@ -326,12 +319,53 @@ export class PostureEngine {
       hudZone  = "GREEN";
     }
 
-    // Skeleton landmarks are x-flipped inside _drawSkeleton when mirrored
     this._drawSkeleton(ctx, lm, width, height, det.displayZone);
     if (hudLabel) this._drawHUD(ctx, width, height, hudZone, hudLabel);
   }
 
-  // ─── Lifecycle ────────────────────────────────────────────────────────────
+  // ─── Helper methods to calculate angles for ML features ───────────────────
+  _calculateKneeAngle(landmarks) {
+    try {
+      const hip = landmarks[23];   // Left hip
+      const knee = landmarks[25];  // Left knee
+      const ankle = landmarks[27]; // Left ankle
+      
+      if (!hip || !knee || !ankle) return 120;
+      
+      const angle = this._calculateAngle(hip, knee, ankle);
+      return Math.round(angle);
+    } catch (e) {
+      return 120;
+    }
+  }
+
+  _calculateElbowAngle(landmarks) {
+    try {
+      const shoulder = landmarks[11]; // Left shoulder
+      const elbow = landmarks[13];    // Left elbow
+      const wrist = landmarks[15];    // Left wrist
+      
+      if (!shoulder || !elbow || !wrist) return 90;
+      
+      const angle = this._calculateAngle(shoulder, elbow, wrist);
+      return Math.round(angle);
+    } catch (e) {
+      return 90;
+    }
+  }
+
+  _calculateAngle(a, b, c) {
+    const aVec = { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
+    const cVec = { x: c.x - b.x, y: c.y - b.y, z: c.z - b.z };
+    
+    const dot = aVec.x * cVec.x + aVec.y * cVec.y + aVec.z * cVec.z;
+    const magA = Math.sqrt(aVec.x * aVec.x + aVec.y * aVec.y + aVec.z * aVec.z);
+    const magC = Math.sqrt(cVec.x * cVec.x + cVec.y * cVec.y + cVec.z * cVec.z);
+    
+    const rad = Math.acos(Math.min(1, Math.max(-1, dot / (magA * magC))));
+    return rad * 180 / Math.PI;
+  }
+
   async start() {
     this.isStopped       = false;
     this.isPaused        = false;
@@ -350,6 +384,7 @@ export class PostureEngine {
       minTrackingConfidence  : 0.6,
     });
 
+    // Bind the _onResults method to maintain 'this' context
     this.pose.onResults((results) => this._onResults(results));
 
     this.camera = new Camera(this.video, {

@@ -1,3 +1,4 @@
+// Utility for speaking posture guidance text using the browser's speech synthesis API.
 export function speakPosture(text) {
   if (!("speechSynthesis" in window)) return;
 
@@ -7,7 +8,7 @@ export function speakPosture(text) {
   utterance.pitch = 1;     // tone
   utterance.volume = 1;    // max volume
 
-  // Optional: better voice (depends on browser)
+  
   const voices = window.speechSynthesis.getVoices();
   const femaleVoice = voices.find(v => v.name.includes("Female"));
   if (femaleVoice) utterance.voice = femaleVoice;

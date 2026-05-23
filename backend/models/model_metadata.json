@@ -1,0 +1,35 @@
+{
+    "model_name": "Support Vector Machine (SVM)",
+    "accuracy": 0.708,
+    "features": [
+        "Age",
+        "Repetition_Number",
+        "Accel_X",
+        "Accel_Y",
+        "Accel_Z",
+        "Gyro_X",
+        "Gyro_Y",
+        "Gyro_Z",
+        "Knee_Angle",
+        "Elbow_Angle",
+        "Stability_Metric"
+    ],
+    "n_features": 11,
+    "n_samples": 5000,
+    "n_classes": 2,
+    "class_mapping": {
+        "0": "Good Posture",
+        "1": "Bad Posture"
+    },
+    "class_distribution": {
+        "Good Posture": 3538,
+        "Bad Posture": 1462
+    },
+    "model_file": "models/best_posture_model.pkl",
+    "scaler_file": "models/scaler.pkl",
+    "feature_file": "models/feature_columns.pkl",
+    "training_date": "2026-05-23 14:47:10",
+    "training_samples": 4000,
+    "test_samples": 1000,
+    "test_accuracy": 0.708
+}

@@ -134,11 +134,6 @@ function computeInsights(sessions) {
     psiSlope < -4 ? "DEGRADING" :
     "STABLE";
 
-  // ── Alert rate (alerts per hour of monitoring) ────────────────────────────
-  const alertsPerHour = totalTimeSec > 0
-    ? Math.round((totalAlerts / totalTimeSec) * 3600 * 10) / 10
-    : 0;
-
   // ── Time-of-day split ─────────────────────────────────────────────────────
   const timeOfDay = { morning: 0, afternoon: 0, evening: 0 };
   sessions.forEach(s => {
@@ -176,23 +171,13 @@ function computeInsights(sessions) {
 
   if (psiTrend === "IMPROVING")
     narratives.push({ icon: "↗", text: "Your PSI has been improving across recent sessions — keep it up.", color: "border-emerald-400/20 bg-emerald-400/5 text-emerald-300" });
-  else if (psiTrend === "DEGRADING")
-    narratives.push({ icon: "↘", text: "PSI has been declining. Try shorter, more frequent sessions and focus on calibrating carefully.", color: "border-red-400/20 bg-red-400/5 text-red-300" });
 
   if (avgGood >= 75)
     narratives.push({ icon: "✓", text: `You're in good posture ${avgGood}% of monitored time — well above average.`, color: "border-emerald-400/20 bg-emerald-400/5 text-emerald-300" });
   else if (avgGood < 50)
     narratives.push({ icon: "⚠", text: `Only ${avgGood}% good posture on average. Consider raising your monitor or adjusting your chair height.`, color: "border-amber-400/20 bg-amber-400/5 text-amber-300" });
 
-  if (topAxes.length > 0) {
-    const topAxis = DRIFT_LABEL[topAxes[0][0]] ?? topAxes[0][0];
-    narratives.push({ icon: "◎", text: `Your most common drift axis is ${topAxis}. Pay attention to this during your next session.`, color: "border-amber-400/20 bg-amber-400/5 text-amber-300" });
-  }
-
-  if (alertsPerHour > 3)
-    narratives.push({ icon: "🔔", text: `${alertsPerHour} alerts/hour is high. Try setting a posture reminder every 20 minutes.`, color: "border-red-400/20 bg-red-400/5 text-red-300" });
-  else if (alertsPerHour === 0 && n >= 3)
-    narratives.push({ icon: "✓", text: "Zero alerts fired across your sessions — excellent sustained posture.", color: "border-emerald-400/20 bg-emerald-400/5 text-emerald-300" });
+  // topAxes are exposed for the UI summary; no automatic narrative pushed here
 
   if (sessionsThisWeek === 0)
     narratives.push({ icon: "◷", text: "No sessions this week. Regular monitoring helps prevent posture fatigue.", color: "border-zinc-600/30 bg-zinc-800/50 text-zinc-400" });
@@ -206,7 +191,7 @@ function computeInsights(sessions) {
     n, totalTimeSec, totalAlerts, avgPSI, avgGood, avgDuration,
     bestSession, worstSession,
     psiValues, allPSI, psiTrend, psiSlope,
-    alertsPerHour, timeOfDay, peakSlot,
+ timeOfDay, peakSlot,
     topAxes, axisCounts, sessionsThisWeek, degradingRatio,
     narratives,
   };
@@ -279,14 +264,6 @@ export default function Insights() {
                     label="Avg Session"
                     value={fmt.duration(ins.avgDuration)}
                     sub="per session"
-                  />
-                </Card>
-                <Card>
-                  <BigStat
-                    label="Alert Rate"
-                    value={ins.alertsPerHour}
-                    sub="alerts per hour"
-                    color={ins.alertsPerHour > 3 ? "text-red-400" : ins.alertsPerHour > 1 ? "text-amber-400" : "text-emerald-400"}
                   />
                 </Card>
               </div>

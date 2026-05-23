@@ -1,22 +1,69 @@
-# -------------------
-# Backend
-# -------------------
-backend/venv/
-backend/**/__pycache__/
-backend/**/*.pyc
-backend/db.sqlite3
-backend/.env
-
-# -------------------
-# Frontend
-# -------------------
-frontend/node_modules/
-frontend/dist/
-frontend/build/
-frontend/.env
-
-# -------------------
-# Common
-# -------------------
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.sqlite3
+db.sqlite3
 .DS_Store
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+
+# Backend models (large files)
+backend/models/*.pkl
+backend/models/*.joblib
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# React build
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.pkl
+*.joblib
+*.pyc
+backend/models/*.pkl
+backend/models/*.joblib
